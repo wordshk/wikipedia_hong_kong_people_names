@@ -21,7 +21,7 @@ def trad(c):
 output = []
 with open("extracted.txt", "r") as fp:
     while line := fp.readline():
-        line = line.rstrip()
+        line = "".join(trad(c) for c in line.rstrip())
         if m := re.match(r'(.*)_\(.*\)', line):
             output.append(m.group(1).replace('_', ' '))
         else:
