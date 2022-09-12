@@ -32,11 +32,11 @@ set +x
 for ((YYYY=1900;YYYY<=2022;YYYY++)); do
     echo $YYYY >&2
     cat query.sql | sed 's/YYYY/'$YYYY'/g' | sqlite3 zhwiki.sqlite3
-done | tee hk_names.txt
+done | tee temp_names.txt
 
 # 生年不详 <- simplified intended, long live zhwiki.
-cat query.sql | sed 's/YYYY年出生/生年不详/' | sqlite3 zhwiki.sqlite3 | tee -a hk_names.txt
-cat query.sql | sed 's/YYYY年出生/在世人物/' | sqlite3 zhwiki.sqlite3 | tee -a hk_names.txt
+cat query.sql | sed 's/YYYY年出生/生年不详/' | sqlite3 zhwiki.sqlite3 | tee -a temp_names.txt
+cat query.sql | sed 's/YYYY年出生/在世人物/' | sqlite3 zhwiki.sqlite3 | tee -a temp_names.txt
 
 # On macOS the sort tries to be smart...
-LC_ALL=C sort hk_names.txt | uniq > extracted.txt
+LC_ALL=C sort temp_names.txt | uniq > extracted.txt

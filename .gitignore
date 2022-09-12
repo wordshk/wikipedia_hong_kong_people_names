@@ -6,4 +6,5 @@ zhwiki-latest-page.sql.fixed
 zhwiki-latest-page.sql.gz
 zhwiki.sqlite3
 extracted.txt
-hk_names.txt
+hong_kong_people_names.txt
+temp_names.txt
