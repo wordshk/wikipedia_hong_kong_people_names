@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+
+"""
+Takes the `extracted.txt` output from `extract` and does some fancy post-processing including:
+
+- Converting simplified characters to traditional characters as is de-facto in
+  Hong Kong
+- Sorting the output with stroke count instead of unicode code point
+- Replacing wikimedia's '_' with space
+"""
+
+import re
+
+import simp_data
+import functools
+
+def trad(c):
+    # Does not convert ambiguous characters like 后
+    return simp_data.REVERSED_DATA.get(c) or c
+
+output = []
+with open("extracted.txt", "r") as fp:
+    while line := fp.readline():
+        line = line.rstrip()
+        if m := re.match(r'(.*)_\(.*\)', line):
+            output.append(m.group(1).replace('_', ' '))
+        else:
+            output.append(line.replace('_', ' '))
+
+import csv
+import bz2
+
+stroke_data = {}
+
+# 'strokes.csv' is ultimately derived from the unihan database, although I
+# exported it from some words.hk internal database due to convenience...
+for row in csv.reader(bz2.open("strokes.csv.bz2", "rt")):
+    stroke_data[row[0]] = int(row[1])
+
+MAX_STROKES = 100  # Bold assumption
+@functools.lru_cache(10000)
+def sorterkey(s):
+    ret = []
+    for ch in s:
+        strokes = stroke_data.get(ch) or 0
+        if strokes > 0:
+            ret.append(strokes * 2**21 + ord(ch))
+        else:
+            ret.append(2 ** 21 * MAX_STROKES + ord(ch))
+    return ret
+
+for line in sorted(output, key=sorterkey):
+    print(line)

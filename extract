@@ -2,7 +2,7 @@
 
 set -ex
 
-# Overall script to extract the stuff. The final output is in final_result.txt
+# Overall script to extract the stuff. The final output is in extracted.txt
 
 if [ ! -f zhwiki-latest-categorylinks.sql ]; then
   curl -O https://dumps.wikimedia.org/zhwiki/latest/zhwiki-latest-categorylinks.sql.gz
@@ -38,4 +38,5 @@ done | tee hk_names.txt
 cat query.sql | sed 's/YYYY年出生/生年不详/' | sqlite3 zhwiki.sqlite3 | tee -a hk_names.txt
 cat query.sql | sed 's/YYYY年出生/在世人物/' | sqlite3 zhwiki.sqlite3 | tee -a hk_names.txt
 
-sort hk_names.txt | uniq > final_result.txt
+# On macOS the sort tries to be smart...
+LC_ALL=C sort hk_names.txt | uniq > extracted.txt
