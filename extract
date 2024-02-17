@@ -2,41 +2,46 @@
 
 set -ex
 
+# LANG=zh_yue
+LANG=zh
+
 # Overall script to extract the stuff. The final output is in extracted.txt
 
-if [ ! -f zhwiki-latest-categorylinks.sql ]; then
-  curl -O https://dumps.wikimedia.org/zhwiki/latest/zhwiki-latest-categorylinks.sql.gz
-  gunzip -k zhwiki-latest-categorylinks.sql.gz
+if [ ! -f "$LANG"wiki-latest-categorylinks.sql ]; then
+  curl -O https://dumps.wikimedia.org/"$LANG"wiki/latest/"$LANG"wiki-latest-categorylinks.sql.gz
+  gunzip -k "$LANG"wiki-latest-categorylinks.sql.gz
 fi
 
-if [ ! -f zhwiki-latest-page.sql ]; then
-  curl -O https://dumps.wikimedia.org/zhwiki/latest/zhwiki-latest-page.sql.gz
-  gunzip -k zhwiki-latest-page.sql.gz
+if [ ! -f "$LANG"wiki-latest-page.sql ]; then
+  curl -O https://dumps.wikimedia.org/"$LANG"wiki/latest/"$LANG"wiki-latest-page.sql.gz
+  gunzip -k "$LANG"wiki-latest-page.sql.gz
+fi
+if [ ! -f "$LANG"wiki-latest-pagelinks.sql.gz ]; then
+  curl -O https://dumps.wikimedia.org/"$LANG"wiki/latest/"$LANG"wiki-latest-pagelinks.sql.gz
+  gunzip -k "$LANG"wiki-latest-pagelinks.sql.gz
 fi
 
-# rm -vf zhwiki.sqlite3 # clear derived file
+# rm -vf "$LANG"wiki.sqlite3 # clear derived file
 
-if [ ! -f zhwiki.sqlite3 ]; then
-    ./hack-mangle.py zhwiki-latest-categorylinks.sql categorylinks
-    sqlite3 zhwiki.sqlite3 < zhwiki-latest-categorylinks.sql.fixed
+if [ ! -f "$LANG"wiki.sqlite3 ]; then
+    ./hack-mangle.py "$LANG"wiki-latest-categorylinks.sql categorylinks
+    sqlite3 "$LANG"wiki.sqlite3 < "$LANG"wiki-latest-categorylinks.sql.fixed
 
-    ./hack-mangle.py zhwiki-latest-page.sql page
-    sqlite3 zhwiki.sqlite3 < zhwiki-latest-page.sql.fixed
+    ./hack-mangle.py "$LANG"wiki-latest-page.sql page
+    sqlite3 "$LANG"wiki.sqlite3 < "$LANG"wiki-latest-page.sql.fixed
 
-    echo 'CREATE INDEX "category_from" ON categorylinks (cl_from);' | sqlite3 zhwiki.sqlite3
-    echo 'CREATE INDEX "category_to" ON categorylinks (cl_to);' | sqlite3 zhwiki.sqlite3
+    ./hack-mangle.py "$LANG"wiki-latest-pagelinks.sql pagelinks
+    sqlite3 "$LANG"wiki.sqlite3 < "$LANG"wiki-latest-pagelinks.sql.fixed
+
+    echo 'CREATE INDEX "category_from" ON categorylinks (cl_from);' | sqlite3 "$LANG"wiki.sqlite3
+    echo 'CREATE INDEX "category_to" ON categorylinks (cl_to);' | sqlite3 "$LANG"wiki.sqlite3
+    echo 'CREATE INDEX "pagelink_to_title" ON pagelinks (pl_title);' | sqlite3 "$LANG"wiki.sqlite3
 fi
 
 set +x
 
-for ((YYYY=1900;YYYY<=2022;YYYY++)); do
-    echo $YYYY >&2
-    cat query.sql | sed 's/YYYY/'$YYYY'/g' | sqlite3 zhwiki.sqlite3
-done | tee temp_names.txt
-
-# 生年不详 <- simplified intended, long live zhwiki.
-cat query.sql | sed 's/YYYY年出生/生年不详/' | sqlite3 zhwiki.sqlite3 | tee -a temp_names.txt
-cat query.sql | sed 's/YYYY年出生/在世人物/' | sqlite3 zhwiki.sqlite3 | tee -a temp_names.txt
+sqlite3 "$LANG"wiki.sqlite3 < query.sql > "$LANG"wiki.fictional-characters.txt
+cat "$LANG"wiki.fictional-characters.txt
 
 # On macOS the sort tries to be smart...
-LC_ALL=C sort temp_names.txt | uniq > extracted.txt
+# LC_ALL=C sort temp_names.txt | uniq > extracted.txt

@@ -1,9 +1,8 @@
 Downloads SQL files from Chinese wikipedia dumps, converts them into
-sqlite-compatible format, and queries the database for Hong Kong people names.
+sqlite-compatible format, and queries the database for popular fictional
+characters.
 
-To start, see `extract`. It will generate a `extracted.txt` file.
+This is based off of earlier work in the main branch that queries for Hong Kong
+people's names.
 
-To fix other issues with extracted.txt, including simplified characters,
-non-name components of the page title, see `post_processing`.
-
-`hong_kong_people_names.txt` is the post_processed result.
+To start, see `extract`. It will generate a `zhwiki.fictional-characters.txt` file.
